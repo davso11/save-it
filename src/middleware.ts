@@ -27,6 +27,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - ... (others pages/routes)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|sign).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|sign|forget-password|reset-password).*)',
   ],
 };

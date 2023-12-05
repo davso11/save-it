@@ -89,7 +89,7 @@
   }
 
   .link {
-    @apply text-blue-600 hover:underline;
+    @apply inline-block text-sm text-blue-600 hover:underline;
   }
 }
 

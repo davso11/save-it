@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -17,44 +16,57 @@ import {
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
-import { credentialSchema, TCredentialProps } from '~/lib/validators/user';
-import Link from 'next/link';
+import { Alert } from '~/components/ui/alert';
+import { resetPassword } from '~/actions';
 
-export const SignInForm = () => {
+const schema = z.object({
+  password: z
+    .string()
+    .min(4, { message: 'Le mot de passe doit contenir au moins 04 caractères' })
+    .max(255, { message: 'Mot de passe trop long' }),
+});
+
+type TSchema = z.infer<typeof schema>;
+
+const ResetPasswordForm = ({ token }: { token: string }) => {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const redirect = useSearchParams().get('callbackUrl') ?? '/home';
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const form = useForm<TCredentialProps>({
-    resolver: zodResolver(credentialSchema),
+  const form = useForm<TSchema>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      email: '',
       password: '',
     },
   });
 
-  const submitHandler = async ({ email, password }: TCredentialProps) => {
+  const submitHandler = async ({ password }: TSchema) => {
     setPending(true);
-    const response = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
+    setError(null);
+    setSuccess(null);
+
+    const res = await resetPassword({ token, password });
     setPending(false);
-    if (!response?.ok) {
-      toast.error('Email ou mot de passe incorrect');
-      return;
+
+    if (!res.ok) {
+      return setError(res.message);
     }
-    toast.success(`Authentification réussie`);
-    router.replace(redirect);
+
+    setSuccess(
+      'Mot de passe réinitialisé. Vous serez rédirigé vers la page de connexion',
+    );
+    setTimeout(() => {
+      router.push('/sign-in');
+    }, 5000);
   };
 
   return (
     <Form {...form}>
       <div className="mb-6 space-y-1">
-        <h2 className="title">Connectez-vous</h2>
-        <p className="desc">Pour avoir accès à votre compte</p>
+        <h2 className="title">Rénitialisez votre mot de passe</h2>
+        <p className="desc">Lorem ipsum dolor sit.</p>
       </div>
       <form
         autoComplete="off"
@@ -63,26 +75,10 @@ export const SignInForm = () => {
       >
         <FormField
           control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Email</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  disabled={pending}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel required>Mot de passe</FormLabel>
+              <FormLabel required>Nouveau mot de passe</FormLabel>
               <FormControl>
                 <div className="space-y-2">
                   <div className="flex gap-x-2">
@@ -112,27 +108,33 @@ export const SignInForm = () => {
                       )}
                     </Button>
                   </div>
-                  <Link
-                    href="/forget-password"
-                    className="link"
-                  >
-                    Mot de passe oublié ?
-                  </Link>
                 </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        {error ? (
+          <Alert
+            variant="error"
+            message={error}
+          />
+        ) : null}
+        {success ? (
+          <Alert
+            variant="success"
+            message={success}
+          />
+        ) : null}
         <Button
           type="submit"
-          className="self-start"
           disabled={pending}
         >
-          Se connecter
+          Confirmer
         </Button>
       </form>
     </Form>
   );
 };
+
+export default ResetPasswordForm;

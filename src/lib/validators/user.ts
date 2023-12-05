@@ -6,7 +6,7 @@ export const newUserSchema = z.object({
   email: z
     .string()
     .min(1, { message: 'Email obligatoire' })
-    .email({ message: 'Email invalide' }),
+    .email({ message: 'Email invalide (Ex: example@mail.com)' }),
   password: z
     .string()
     .min(4, { message: 'Le mot de passe doit contenir au moins 04 caractères' })
@@ -19,7 +19,7 @@ export const credentialSchema = z.object({
   email: z
     .string()
     .min(1, { message: 'Email obligatoire' })
-    .email({ message: 'Email invalide' }),
+    .email({ message: 'Email invalide (Ex: example@mail.com)' }),
   password: z
     .string()
     .min(4, { message: 'Le mot de passe doit contenir au moins 04 caractères' })
